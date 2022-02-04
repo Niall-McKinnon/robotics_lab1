@@ -5,6 +5,8 @@ import rospy
 # we are going to read turtlesim/Pose messages here
 from turtlesim.msg import Pose
 
+from geometry_msg.msg import Twist
+
 # import the new shortpose message
 from robotics_lab1.msg import Turtlecontrol
 
@@ -12,22 +14,39 @@ from robotics_lab1.msg import Turtlecontrol
 import math
 
 # Declare a constant for the angular position scales
-ROTATION_SCALE = 180.0/math.pi
+# ROTATION_SCALE = 180.0/math.pi
 
 pos_msg = Turtlecontrol()
 
-def pose_callback(data):
-	global pos_msg
+xd = 0.0
+kp = 0.0
+xt = 0.0
+velocity = 0.0
+
+def control_params_callback(data):
+	#global pos_msg
 	
-	# convert angular positions to degrees
-	pos_msg.theta = data.theta * ROTATION_SCALE
+	# Get turtle's x possition:
+	global xd
+	# Get the turtle's desired position:
+	global kp
 	
-	# convert x and y to cm
-	pos_msg.x = data.x * 100
-	pos_msg.y = data.y * 100
+	xd = data.xd
+	kp = data.kp
+	
+	
+	# Calculate velocity based on turtle location:
+	
 	
 	# show the results on screen
-	# rospy.loginfo('x is %0.2f cm, y is %0.2f cm, theta is %0.2f degrees', x_in_cm, y_in_cm, rot_in_degrees)
+	rospy.loginfo('xd is %0.2f, kp is %0.2f', xd, kp)
+	
+def pose_callback(data):
+	
+	# convert x and y to cm
+	global xt
+	
+	xt = data.x
 	
 
 if __name__ == '__main__':
@@ -36,17 +55,21 @@ if __name__ == '__main__':
 	
 	# add a subscriber to read position information fromn turtle1/pos
 	rospy.Subscriber('/turtle1/pose', Pose, pose_callback)
+	rospy.Subscriber('/turtle1/control_params', Turtlecontrol, control_params_callback)
 	
 	# spin() simply keeps python from exiting until this node is stopped
 	# rospy.spin()
 	
 	# define a publisher
-	pos_pub = rospy.Publisher('/turtle1/shortpose', Shortpose, queue_size = 10)
+	pos_pub = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size = 10)
 	
 	# set a 10 Hz frequency for the publisher loop
 	loop_rate = rospy.Rate(10)
 	
 	while not rospy.is_shutdown():
+	
+		velocity = kp * (xd - xt)
+		
 		# Publish the message
 		pos_pub.publish(pos_msg)
 		

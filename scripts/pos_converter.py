@@ -8,12 +8,9 @@ from turtlesim.msg import Pose
 # for converting radians to degrees, import the math module
 import math
 
-# Declare a constant for the angular position scales
-ROTATION_SCALE = 180.0/math.pi
+
 
 def pose_callback(data):
-	# convert angular positions here
-	rot_in_degrees = data.theta * ROTATION_SCALE
 	
 	# convert x and y to cm
 	x_in_cm = data.x * 100
