@@ -5,47 +5,37 @@ import rospy
 # we are going to read turtlesim/Pose messages here
 from turtlesim.msg import Pose
 
-from geometry_msg.msg import Twist
+# Import twist
+from geometry_msgs.msg import Twist
 
 # import the new shortpose message
 from robotics_lab1.msg import Turtlecontrol
 
-# for converting radians to degrees, import the math module
 import math
 
-# Declare a constant for the angular position scales
-# ROTATION_SCALE = 180.0/math.pi
-
-pos_msg = Turtlecontrol()
-
+# create global variables
 xd = 0.0
 kp = 0.0
 xt = 0.0
 velocity = 0.0
 
 def control_params_callback(data):
-	#global pos_msg
 	
-	# Get turtle's x possition:
 	global xd
-	# Get the turtle's desired position:
 	global kp
 	
+	# Get control parameters from turtlecontrol.msg
 	xd = data.xd
 	kp = data.kp
-	
-	
-	# Calculate velocity based on turtle location:
-	
 	
 	# show the results on screen
 	rospy.loginfo('xd is %0.2f, kp is %0.2f', xd, kp)
 	
 def pose_callback(data):
 	
-	# convert x and y to cm
 	global xt
 	
+	# Get currentx position of turtle
 	xt = data.x
 	
 
@@ -61,17 +51,21 @@ if __name__ == '__main__':
 	# rospy.spin()
 	
 	# define a publisher
-	pos_pub = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size = 10)
+	cmd_pub = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size = 10)
+	
+	# Initialize Twist variable
+	vel_cmd = Twist()
 	
 	# set a 10 Hz frequency for the publisher loop
 	loop_rate = rospy.Rate(10)
 	
 	while not rospy.is_shutdown():
-	
-		velocity = kp * (xd - xt)
+		
+		# Calculate velocity based on turtle location:
+		vel_cmd.linear.x = kp * (xd - xt)
 		
 		# Publish the message
-		pos_pub.publish(pos_msg)
+		cmd_pub.publish(vel_cmd)
 		
 		# We pause/sleep here for 0.1 of a second
 		loop_rate.sleep()
